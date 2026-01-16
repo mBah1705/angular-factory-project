@@ -12,7 +12,7 @@ interface Notification {
 }
 
 interface NotificationSender {
-  sendNotification(message: string): void;
+  sendNotification(message: string): {success: boolean, deliveryInfo: string};
   getIcon(): string;
   getTitle(): string;
 }
@@ -32,16 +32,19 @@ abstract class NotificationCreator {
       return;
     }
     const sender = this.createSender(this.selectedType);
-    sender.sendNotification(this.message);
-    this.notifications.unshift({
-      id: this.idCounter++,
-      type: this.selectedType,
-      message: this.message,
-      icon: sender.getIcon(),
-      title: sender.getTitle(),
-      timestamp: new Date()
-    });
-    this.message = '';
+    const {success, deliveryInfo} = sender.sendNotification(this.message);
+
+    if (success) {
+      this.notifications.unshift({
+        id: this.idCounter++,
+        type: this.selectedType,
+        message: `${this.message} - ${deliveryInfo}`,
+        icon: sender.getIcon(),
+        title: sender.getTitle(),
+        timestamp: new Date()
+      });
+      this.message = '';
+    }
   }
 }
 
@@ -183,7 +186,7 @@ export class NotificationCenterComponent extends NotificationCreator {
 @Injectable({
   providedIn: 'root'
 })
-class NotificationFactory {
+export class NotificationFactory {
   createSender(type: string): NotificationSender {
     switch (type) {
       case 'email':
@@ -204,7 +207,7 @@ class NotificationFactory {
 
 // Concrete classes creation implementing NotificationSender interface
 class EmailSender implements NotificationSender {
-  sendNotification(message: string): void {
+  sendNotification(message: string): {success: boolean, deliveryInfo: string} {
     let success = false;
     let deliveryInfo = '';
 
@@ -230,6 +233,8 @@ class EmailSender implements NotificationSender {
         deliveryInfo = `Envoyé via ${smtpServer}`;
         success = true;
       }
+
+    return { success, deliveryInfo };
   }
   getIcon(): string {
     return '📧';
@@ -240,7 +245,7 @@ class EmailSender implements NotificationSender {
 }
 
 class SmsSender implements NotificationSender {
-  sendNotification(message: string): void {
+  sendNotification(message: string): {success: boolean, deliveryInfo: string} {
     let success = false;
     let deliveryInfo = '';
 
@@ -267,6 +272,8 @@ class SmsSender implements NotificationSender {
     console.log('Réponse API SMS:', apiResponse);
     deliveryInfo = `${smsCount} SMS envoyé(s)`;
     success = true;
+
+    return { success, deliveryInfo };
   }
   getIcon(): string {
     return '📱';
@@ -277,7 +284,7 @@ class SmsSender implements NotificationSender {
 }
 
 class PushSender implements NotificationSender {
-  sendNotification(message: string): void {
+  sendNotification(message: string): {success: boolean, deliveryInfo: string} {
     let success = false;
     let deliveryInfo = '';
     // Logique spécifique Push Notification
@@ -312,6 +319,8 @@ class PushSender implements NotificationSender {
         console.warn('Push notifications non supportées');
         deliveryInfo = 'Push non supportée';
       }
+
+    return { success, deliveryInfo };
   }
   getIcon(): string {
     return '🔔';
@@ -322,7 +331,7 @@ class PushSender implements NotificationSender {
 }
 
 class SlackSender implements NotificationSender {
-  sendNotification(message: string): void {
+  sendNotification(message: string): {success: boolean, deliveryInfo: string} {
     let success = false;
     let deliveryInfo = '';
     // Logique spécifique Slack
@@ -355,6 +364,8 @@ class SlackSender implements NotificationSender {
       deliveryInfo = `Posté sur ${slackConfig.channel}`;
       success = true;
     }
+
+    return { success, deliveryInfo };
   }
   getIcon(): string {
     return '💬';
@@ -365,7 +376,8 @@ class SlackSender implements NotificationSender {
 }
 
 class WebhookSender implements NotificationSender {
-  sendNotification(message: string): void {
+  sendNotification(message: string): {success: boolean, deliveryInfo: string} {
+
     let success = false;
     let deliveryInfo = '';
     // Logique spécifique Webhook
@@ -404,6 +416,8 @@ class WebhookSender implements NotificationSender {
       deliveryInfo = `Webhook appelé (${webhookResponse.status})`;
       success = true;
     }
+
+    return { success, deliveryInfo };
   }
   getIcon(): string {
     return '🔗';

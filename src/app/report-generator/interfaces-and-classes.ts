@@ -1,11 +1,154 @@
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
 import { ReportData } from "../components/report-generator.component";
 
 export type Format = 'pdf' | 'excel' | 'csv' | 'json';
 export type ReportType = 'sales' | 'inventory' | 'financial' | 'customer' | 'analytics';
 
-export interface ReportGenerator {
+interface ReportGeneratorFactory {
+    createTitle(): string;
+    createContent(format: Format): string;
+    createFooter(format: Format): string;
+}
+
+export interface ReportGeneratorInterface {
     generateReport(format: Format): ReportData;
+}
+
+abstract class Report {
+    title = '';
+    content = '';
+    footer = '';
+
+    abstract generateReport(format: Format): ReportData;
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+class SalesReportGeneratorFactory implements ReportGeneratorFactory {
+    createTitle(): string {
+        return 'Rapport de Ventes - Trimestre 4';
+    }
+    createContent(format: Format): string {
+        return new SalesContent(format).getContent();
+    }
+    createFooter(format: Format): string {
+        return new SalesFooter(format).getFooter();
+    }
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+class InventoryReportGeneratorFactory implements ReportGeneratorFactory {
+    createTitle(): string {
+        return 'Rapport d\'Inventaire - Janvier 2026';
+    }
+    createContent(format: Format): string {
+        return new InventoryContent(format).getContent();
+    }
+    createFooter(format: Format): string {
+        return new InventoryFooter(format).getFooter();
+    }
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+class FinancialReportGeneratorFactory implements ReportGeneratorFactory {
+    createTitle(): string {
+        return 'Rapport Financier Annuel 2025';
+    }
+    createContent(format: Format): string {
+        return new FinancialContent(format).getContent();
+    }
+    createFooter(format: Format): string {
+        return new FinancialFooter(format).getFooter();
+    }
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+class CustomerReportGeneratorFactory implements ReportGeneratorFactory {
+    createTitle(): string {
+        return 'Rapport Clients - Base Active';
+    }
+    createContent(format: Format): string {
+        return new CustomerContent(format).getContent();
+    }
+    createFooter(format: Format): string {
+        return new CustomerFooter(format).getFooter();
+    }
+}
+
+@Injectable({
+    providedIn: 'root'
+})
+class AnalyticsReportGeneratorFactory implements ReportGeneratorFactory {
+    createTitle(): string {
+        return 'Rapport Analytics - Performance Web';
+    }
+    createContent(format: Format): string {
+        return new AnalyticsContent(format).getContent();
+    }
+    createFooter(format: Format): string {
+        return new AnalyticsFooter(format).getFooter();
+    }
+}
+
+class SalesReport extends Report {
+    reportGeneratorFactory = new SalesReportGeneratorFactory();
+
+    generateReport(format: Format): ReportData {
+        this.title = this.reportGeneratorFactory.createTitle();
+        this.content = this.reportGeneratorFactory.createContent(format);
+        this.footer = this.reportGeneratorFactory.createFooter(format);
+
+        return { title: this.title, content: this.content, footer: this.footer, generatedAt: new Date() };
+    }
+}
+
+class InventoryReport extends Report {
+    reportGeneratorFactory = new InventoryReportGeneratorFactory();
+
+    generateReport(format: Format): ReportData {
+        this.title = this.reportGeneratorFactory.createTitle();
+        this.content = this.reportGeneratorFactory.createContent(format);
+        this.footer = this.reportGeneratorFactory.createFooter(format);
+        return { title: this.title, content: this.content, footer: this.footer, generatedAt: new Date() };
+    }
+}
+
+class FinancialReport extends Report {
+    reportGeneratorFactory = new FinancialReportGeneratorFactory();
+
+    generateReport(format: Format): ReportData {
+        this.title = this.reportGeneratorFactory.createTitle();
+        this.content = this.reportGeneratorFactory.createContent(format);
+        this.footer = this.reportGeneratorFactory.createFooter(format);
+        return { title: this.title, content: this.content, footer: this.footer, generatedAt: new Date() };
+    }
+}
+
+class CustomerReport extends Report {
+    reportGeneratorFactory = new CustomerReportGeneratorFactory();
+    generateReport(format: Format): ReportData {
+        this.title = this.reportGeneratorFactory.createTitle();
+        this.content = this.reportGeneratorFactory.createContent(format);
+        this.footer = this.reportGeneratorFactory.createFooter(format);
+        return { title: this.title, content: this.content, footer: this.footer, generatedAt: new Date() };
+    }
+}
+
+class AnalyticsReport extends Report {
+    reportGeneratorFactory = new AnalyticsReportGeneratorFactory();
+    generateReport(format: Format): ReportData {
+        this.title = this.reportGeneratorFactory.createTitle();
+        this.content = this.reportGeneratorFactory.createContent(format);
+        this.footer = this.reportGeneratorFactory.createFooter(format);
+        return { title: this.title, content: this.content, footer: this.footer, generatedAt: new Date() };
+    }
 }
 
 export abstract class ReportCreator {
@@ -13,7 +156,7 @@ export abstract class ReportCreator {
     selectedFormat: Format = 'pdf';
     generatedReport: ReportData | null = null;
     
-    abstract createReport(type: ReportType): ReportGenerator;
+    abstract createReport(type: ReportType): ReportGeneratorInterface;
 
     generateReport(): void {
         const reportGenerator = this.createReport(this.selectedReportType);
@@ -25,51 +168,21 @@ export abstract class ReportCreator {
     providedIn: 'root'
 })
 export class ReportFactory extends ReportCreator {
-    createReport(type: ReportType): ReportGenerator {
+     createReport(type: ReportType): ReportGeneratorInterface {
         switch(type) {
             case 'sales':
-                return new SalesReportGenerator();
+                return new SalesReport();
             case 'inventory':
-                return new InventoryReportGenerator();
+                return new InventoryReport();
             case 'financial':
-                return new FinancialReportGenerator();
+                return new FinancialReport();
             case 'customer':
-                return new CustomerReportGenerator();
+                return new CustomerReport();
             case 'analytics':
-                return new AnalyticsReportGenerator();
+                return new AnalyticsReport();
             default:
                 throw new Error(`Report type ${type} not supported.`);
         }
-    }
-}
-
-class SalesReportGenerator implements ReportGenerator {
-    generateReport(format: Format): ReportData {
-        return { title: 'Rapport de Ventes - Trimestre 4', content: new SalesContent(format).getContent(), footer: new SalesFooter(format).getFooter(), generatedAt: new Date() };
-    }
-}
-
-class InventoryReportGenerator implements ReportGenerator {
-    generateReport(format: Format): ReportData {
-        return { title: 'Rapport d\'Inventaire - Janvier 2026', content: new InventoryContent(format).getContent(), footer: new InventoryFooter(format).getFooter(), generatedAt: new Date() };
-    }
-}
-
-class FinancialReportGenerator implements ReportGenerator {
-    generateReport(format: Format): ReportData {
-        return { title: 'Rapport Financier Annuel 2025', content: new FinancialContent(format).getContent(), footer: new FinancialFooter(format).getFooter(), generatedAt: new Date() };
-    }
-}
-
-class CustomerReportGenerator implements ReportGenerator {
-    generateReport(format: Format): ReportData {
-        return { title: 'Rapport Clients - Base Active', content: new CustomerContent(format).getContent(), footer: new CustomerFooter(format).getFooter(), generatedAt: new Date() };
-    }
-}
-
-class AnalyticsReportGenerator implements ReportGenerator {
-    generateReport(format: Format): ReportData {
-        return { title: 'Rapport Analytics - Performance Web', content: new AnalyticsContent(format).getContent(), footer: new AnalyticsFooter(format).getFooter(), generatedAt: new Date() };
     }
 }
 

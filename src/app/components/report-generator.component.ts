@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Format, ReportCreator, ReportFactory, ReportGenerator, ReportType } from '../report-generator/interfaces-and-classes';
+import { Format, ReportCreator, ReportFactory, ReportGeneratorInterface, ReportType } from '../report-generator/interfaces-and-classes';
 
 export interface ReportData {
   title: string;
@@ -119,7 +119,7 @@ export interface ReportData {
 export class ReportGeneratorComponent extends ReportCreator {
   reportFactory = inject(ReportFactory)
 
-  createReport(type: ReportType): ReportGenerator {
+  createReport(type: ReportType): ReportGeneratorInterface {
     return this.reportFactory.createReport(type);
   }
 }

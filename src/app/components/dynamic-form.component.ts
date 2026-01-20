@@ -194,82 +194,24 @@ export class DynamicFormComponent extends FieldCreator {
   componentFactory = inject(ComponentFactory);
   fieldFactory = inject(FieldFactory);
 
-  singleFormField: FormField | undefined = undefined
-
   createField() {
-    this.singleFormField = this.fieldFactory.createField(this.selectedFieldType, this.fieldLabel);
-    return this.singleFormField
+    const field = this.fieldFactory.createField(this.selectedFieldType, this.fieldLabel);
+    this.components = this.fieldFactory.components
+    return field
   }
 
-  validateField() {
-    return this.fieldFactory.validateField(this.singleFormField!)
+  validateField(): boolean {
+    for (const [index, field] of this.formFields.entries()) {
+      const isValid = this.fieldFactory.validateField(field, index)
+      if(!isValid) {
+        return false
+      }
+    }
+
+    return true
   }
+
   getComponent(type: string) {
     return this.componentFactory.createComponent(type);
   }
-
-  // submitForm() {
-  //   // PROBLÈME: Plus de if/else pour valider selon le type
-  //   const data: any = {};
-  //   let isValid = true;
-
-  //   for (const field of this.formFields) {
-  //     if (field.type === 'text' || field.type === 'textarea') {
-  //       if (!field.value || field.value.trim() === '') {
-  //         alert(`Le champ "${field.label}" est requis`);
-  //         isValid = false;
-  //         break;
-  //       }
-  //       data[field.id] = field.value.trim();
-        
-  //     } else if (field.type === 'email') {
-  //       if (!field.value || !field.value.includes('@')) {
-  //         alert(`Email invalide pour "${field.label}"`);
-  //         isValid = false;
-  //         break;
-  //       }
-  //       data[field.id] = field.value;
-        
-  //     } else if (field.type === 'number') {
-  //       if (field.value === null || field.value === undefined) {
-  //         alert(`Le champ "${field.label}" est requis`);
-  //         isValid = false;
-  //         break;
-  //       }
-  //       data[field.id] = Number(field.value);
-        
-  //     } else if (field.type === 'checkbox') {
-  //       data[field.id] = Boolean(field.value);
-        
-  //     } else if (field.type === 'radio' || field.type === 'select') {
-  //       if (!field.value) {
-  //         alert(`Veuillez sélectionner une option pour "${field.label}"`);
-  //         isValid = false;
-  //         break;
-  //       }
-  //       data[field.id] = field.value;
-        
-  //     } else if (field.type === 'date') {
-  //       if (!field.value) {
-  //         alert(`Le champ "${field.label}" est requis`);
-  //         isValid = false;
-  //         break;
-  //       }
-  //       data[field.id] = field.value;
-        
-  //     } else if (field.type === 'file') {
-  //       if (!field.value) {
-  //         alert(`Veuillez sélectionner un fichier pour "${field.label}"`);
-  //         isValid = false;
-  //         break;
-  //       }
-  //       data[field.id] = field.value;
-  //     }
-  //   }
-
-  //   if (isValid) {
-  //     this.submittedData = data;
-  //     console.log('Formulaire soumis:', data);
-  //   }
-  // }
 }

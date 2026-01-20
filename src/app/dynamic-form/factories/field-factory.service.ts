@@ -192,10 +192,12 @@ export abstract class FieldCreator {
   type = '';
   label = '';
   formFields: FormField[] = [];
+  protected components: BaseFormField[] = [];
+
   submittedData: any = null;
 
   abstract createField(type: string, label: string): FormField | undefined;
-  abstract validateField(field: FormField): boolean
+  abstract validateField(field: FormField, id: number): boolean
 
 
   addField(): void {
@@ -206,21 +208,25 @@ export abstract class FieldCreator {
   }
   
   removeField(id: string) {
-    this.formFields = this.formFields.filter(f => f.id !== id);
+    const indexToRemove = this.formFields.findIndex(field => field.id === id)
+    if(indexToRemove > -1) {
+      this.formFields.splice(indexToRemove, 1)
+      this.removeComponent(indexToRemove)
+    }
+  }
+
+  private removeComponent(index: number) {
+    this.components.splice(index, 1)
   }
 
   
   submitForm() {
-    // PROBLÈME: Plus de if/else pour valider selon le type
     const data: any = {};
-    console.log(this.formFields);
 
-    for (const field of this.formFields) {
-      if(!this.validateField(field)) {
+    for (const [index, field] of this.formFields.entries()) {     
+      if(!this.validateField(field, index))
         return
-      }
-      
-      
+
         if(typeof field.value === 'string') {
           data[field.id] = field.value.trim();
         } else if(typeof field.value === 'number') {
@@ -230,54 +236,10 @@ export abstract class FieldCreator {
         } else {
           data[field.id] = field.value;
         }
-        
-      // } else if (field.type === 'email') {
-      //   if (!field.value || !field.value.includes('@')) {
-      //     alert(`Email invalide pour "${field.label}"`);
-      //     isValid = false;
-      //     break;
-      //   }
-      //   data[field.id] = field.value;
-        
-      // } else if (field.type === 'number') {
-      //   if (field.value === null || field.value === undefined) {
-      //     alert(`Le champ "${field.label}" est requis`);
-      //     isValid = false;
-      //     break;
-      //   }
-      //   data[field.id] = Number(field.value);
-        
-      // } else if (field.type === 'checkbox') {
-      //   data[field.id] = Boolean(field.value);
-        
-      // } else if (field.type === 'radio' || field.type === 'select') {
-      //   if (!field.value) {
-      //     alert(`Veuillez sélectionner une option pour "${field.label}"`);
-      //     isValid = false;
-      //     break;
-      //   }
-      //   data[field.id] = field.value;
-        
-      // } else if (field.type === 'date') {
-      //   if (!field.value) {
-      //     alert(`Le champ "${field.label}" est requis`);
-      //     isValid = false;
-      //     break;
-      //   }
-      //   data[field.id] = field.value;
-        
-      // } else if (field.type === 'file') {
-      //   if (!field.value) {
-      //     alert(`Veuillez sélectionner un fichier pour "${field.label}"`);
-      //     isValid = false;
-      //     break;
-      //   }
-      //   data[field.id] = field.value;
-      // }
     }
 
-      this.submittedData = data;
-      console.log('Formulaire soumis:', data);
+    this.submittedData = data;
+    console.log('Formulaire soumis:', data);
   }
 }
 
@@ -286,49 +248,61 @@ export abstract class FieldCreator {
 })
 export class FieldFactory extends FieldCreator {
   private fieldCounter = 0;
-  private component!: BaseFormField;
+  override components: BaseFormField[] = []
 
   createField(type: string, label: string): FormField| undefined {
+
+  let component: BaseFormField
+
     if (!label.trim()) {
       alert('Veuillez entrer un label');
       return;
     }
     switch (type) {
       case 'text':
-        this.component =  new TextInputField(type, this.fieldCounter)
-        return this.incrementCounterAndCreate(this.component, label)
+        component =  new TextInputField(type, this.fieldCounter)
+        this.components.push(component)
+        return this.incrementCounterAndCreate(component, label)
 
       case 'email':
-        this.component = new EmailInputField(type, this.fieldCounter)
-        return this.incrementCounterAndCreate(this.component, label)
+        component = new EmailInputField(type, this.fieldCounter)
+        this.components.push(component)
+        return this.incrementCounterAndCreate(component, label)
 
       case 'number':
-        this.component = new NumberInputField(type, this.fieldCounter)
-         return this.incrementCounterAndCreate(this.component, label)
+        component = new NumberInputField(type, this.fieldCounter)
+        this.components.push(component)
+         return this.incrementCounterAndCreate(component, label)
 
       case 'textarea':
-        this.component = new TextareaField(type, this.fieldCounter)
-        return this.incrementCounterAndCreate(this.component, label)
+        component = new TextareaField(type, this.fieldCounter)
+        this.components.push(component)
+        return this.incrementCounterAndCreate(component, label)
 
       case 'checkbox':
-        this.component = new CheckboxField(type, this.fieldCounter)
-        return this.incrementCounterAndCreate(this.component, label)
+        component = new CheckboxField(type, this.fieldCounter)
+        this.components.push(component)
+        return this.incrementCounterAndCreate(component, label)
 
       case 'radio':
-        this.component = new RadioField(type, this.fieldCounter)
-        return this.incrementCounterAndCreate(this.component, label)
+        component = new RadioField(type, this.fieldCounter)
+        this.components.push(component)
+        return this.incrementCounterAndCreate(component, label)
 
       case 'select':
-        this.component = new SelectField(type, this.fieldCounter)
-        return this.incrementCounterAndCreate(this.component, label)
+        component = new SelectField(type, this.fieldCounter)
+        this.components.push(component)
+        return this.incrementCounterAndCreate(component, label)
 
       case 'date':
-        this.component = new DateField(type, this.fieldCounter)
-        return this.incrementCounterAndCreate(this.component, label)
+        component = new DateField(type, this.fieldCounter)
+        this.components.push(component)
+        return this.incrementCounterAndCreate(component, label)
 
       case 'file':
-        this.component = new FileField(type, this.fieldCounter)
-        return this.incrementCounterAndCreate(this.component, label)
+        component = new FileField(type, this.fieldCounter)
+        this.components.push(component)
+        return this.incrementCounterAndCreate(component, label)
 
       default:
         throw new Error(`Unsupported field type: ${type}`);
@@ -340,7 +314,7 @@ export class FieldFactory extends FieldCreator {
     return component.createFormField(label)
   }
 
-  validateField(field: FormField): boolean {
-    return this.component!.validateFormField(field)
+  validateField(field: FormField, index: number): boolean {
+    return this.components[index].validateFormField(field)
   }
 }

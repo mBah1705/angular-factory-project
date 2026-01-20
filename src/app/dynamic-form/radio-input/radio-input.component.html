@@ -1,0 +1,12 @@
+<div class="radio-group">
+    <div *ngFor="let option of field().options" class="radio-option">
+        <input 
+            type="radio"
+            [name]="field().id"
+            [value]="option"
+            [(ngModel)]="field().value"
+            [id]="field().id + '_' + option"
+        />
+        <label [for]="field().id + '_' + option">{{ option }}</label>
+    </div>
+</div>

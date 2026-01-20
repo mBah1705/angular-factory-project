@@ -1,0 +1,10 @@
+<select
+    [(ngModel)]="field().value"
+    [name]="field().id"
+    class="form-control"
+>
+    <option value="">Sélectionner...</option>
+    <option *ngFor="let option of field().options" [value]="option">
+    {{ option }}
+    </option>
+</select>

@@ -1,0 +1,9 @@
+<div class="checkbox-wrapper">
+    <input 
+    type="checkbox"
+    [(ngModel)]="field().value"
+    [name]="field().id"
+    [id]="field().id"
+    />
+    <label [for]="field().id">{{ field().label }}</label>
+</div>
